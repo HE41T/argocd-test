@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/HE41T/argocd-test.git'  # Git repo ของคุณ
     targetRevision: main
-    path: '.'                                               # path ที่มี index.html
+    path: '.'                                               # root ของ repo
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: default
@@ -17,7 +17,7 @@ spec:
       prune: true
       selfHeal: true
 ---
-# Deployment สำหรับ serve index.html ด้วย nginx
+# Deployment สำหรับ serve index.html ด้วย nginx + git-sync
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,28 +41,23 @@ spec:
           volumeMounts:
             - name: html-volume
               mountPath: /usr/share/nginx/html
+        - name: git-sync
+          image: k8s.gcr.io/git-sync/git-sync:v3.9.0
+          env:
+            - name: GIT_SYNC_REPO
+              value: "https://github.com/HE41T/argocd-test.git"
+            - name: GIT_SYNC_BRANCH
+              value: "main"
+            - name: GIT_SYNC_ROOT
+              value: "/git"
+            - name: GIT_SYNC_WAIT
+              value: "30"
+          volumeMounts:
+            - name: html-volume
+              mountPath: /git
       volumes:
         - name: html-volume
-          configMap:
-            name: test-app-html
----
-# ConfigMap สำหรับ index.html
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: test-app-html
-  namespace: default
-data:
-  index.html: |
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Test App</title>
-      </head>
-      <body>
-        <h1>nik nik nik nik</h1>
-      </body>
-    </html>
+          emptyDir: {}
 ---
 # Service แบบ NodePort
 apiVersion: v1
@@ -77,4 +72,4 @@ spec:
   ports:
     - port: 80
       targetPort: 80
-      nodePort: 30080   # กำหนด NodePort เอง
+      nodePort: 31000
