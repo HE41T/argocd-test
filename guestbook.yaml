@@ -46,47 +46,23 @@ spec:
           configMap:
             name: test-app-html
 ---
-apiVersion: apps/v1
-kind: Deployment
+# ConfigMap สำหรับ index.html
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: test-app
+  name: test-app-html
   namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: test-app
-  template:
-    metadata:
-      labels:
-        app: test-app
-    spec:
-      containers:
-        - name: nginx
-          image: nginx:stable
-          ports:
-            - containerPort: 80
-          volumeMounts:
-            - name: html-volume
-              mountPath: /usr/share/nginx/html
-        - name: git-sync
-          image: k8s.gcr.io/git-sync/git-sync:v3.9.0
-          env:
-            - name: GIT_SYNC_REPO
-              value: "https://github.com/HE41T/argocd-test.git"
-            - name: GIT_SYNC_BRANCH
-              value: "main"
-            - name: GIT_SYNC_ROOT
-              value: "/git"
-            - name: GIT_SYNC_WAIT
-              value: "30"
-          volumeMounts:
-            - name: html-volume
-              mountPath: /git
-      volumes:
-        - name: html-volume
-          emptyDir: {}
-
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Test App</title>
+      </head>
+      <body>
+        <h1>nik nik nik nik</h1>
+      </body>
+    </html>
 ---
 # Service แบบ NodePort
 apiVersion: v1
